@@ -29,23 +29,30 @@ def about():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
-    if request.method == "POST":
-        # change this to actually validate the entire form submission
-        # and not just one field
+    # Validates that a username and password was entered on your login form
+    if request.method == "POST" and form.validate_on_submit():
         if form.username.data:
-            # Get the username and password values from the form.
-
-            # using your model, query database for a user based on the username
-            # and password submitted
-            # store the result of that query to a `user` variable so it can be
-            # passed to the login_user() method.
+            
+            # Gets the username and password values from the form.
+            username = form.username.data
+            password = form.password.data
+            
+             # checks that the username and password entered matches a user that is in the database.
+            user = UserProfile.query.filter(username==username, password==password).first()
 
             # get user id, load into session
             login_user(user)
 
-            # remember to flash a message to the user
-            return redirect(url_for("home")) # they should be redirected to a secure-page route instead
+            # flashes a message to the user
+            flash('Logged in successfully.', 'success')
+            return redirect(url_for("secure_page"))
     return render_template("login.html", form=form)
+
+@app.route('/secure-page')
+@login_required
+def secure_page():
+    """Renders a secure page on our website that only logged in users can access."""
+    return render_template('secure_page.html')
 
 # user_loader callback. This callback is used to reload the user object from
 # the user ID stored in the session
