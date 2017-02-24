@@ -30,29 +30,32 @@ def about():
 def login():
     form = LoginForm()
     # Validates that a username and password was entered on your login form
-    if request.method == "POST" and form.validate_on_submit():
-        if form.username.data:
-            
+    if request.method == 'POST' and form.validate_on_submit():
+        if form.username.data:    
             # Gets the username and password values from the form.
-            username = form.username.data
-            password = form.password.data
+           username = request.form['username'] #username = form.username.data
+           password = request.form['password'] #password = form.password.data
+            
             
              # checks that the username and password entered matches a user that is in the database.
-            user = UserProfile.query.filter(username==username, password==password).first()
-
+           user = UserProfile.query.filter(username==username, password==password).first()
+            
+           if user is None:
+                flash('Username or Password is invalid' , 'error')
+        
             # get user id, load into session
-            login_user(user)
+           login_user(user)
 
             # flashes a message to the user
-            flash('Logged in successfully.', 'success')
-            return redirect(url_for("secure_page"))
+           flash('Logged in successfully.', 'success')
+           return redirect(url_for("secure_page"))
     return render_template("login.html", form=form)
 
 @app.route('/secure-page')
 @login_required
 def secure_page():
-    """Renders a secure page on our website that only logged in users can access."""
-    return render_template('secure_page.html')
+        """Renders a secure page on our website that only logged in users can access."""
+        return render_template('secure_page.html')
 
 # user_loader callback. This callback is used to reload the user object from
 # the user ID stored in the session
@@ -60,6 +63,13 @@ def secure_page():
 def load_user(id):
     return UserProfile.query.get(int(id))
 
+@app.route("/logout")
+@login_required
+def logout():
+    # Logouts the user and ends the session
+    logout_user()
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('home'))
 ###
 # The functions below should be applicable to all Flask apps.
 ###
